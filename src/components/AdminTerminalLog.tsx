@@ -53,7 +53,7 @@ export default function AdminTerminalLog({ logs, onClear }: AdminTerminalLogProp
         className="p-4 h-32 overflow-y-auto space-y-1.5 scrollbar-thin scrollbar-thumb-slate-800 bg-slate-950/90 text-slate-300 leading-relaxed"
       >
         <div className="text-slate-500 text-[10px] pb-1 border-b border-slate-900 mb-2">
-          -- SESSION AUDIT REPORT / SYSTEM INITIALIZED @ GMT {new Date().toISOString().substring(11, 19)} --
+          -- SESSION AUDIT REPORT / SYSTEM INITIALIZED @ {new Date().toLocaleTimeString('es-CL', { hour12: false })} CLT --
         </div>
         
         {logs.length === 0 ? (

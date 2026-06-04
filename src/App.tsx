@@ -309,7 +309,7 @@ export default function App() {
 
   // --- LOGGING UTILITY ---
   const addLog = (message: string, level: LogEntry['level'] = 'info') => {
-    const timestamp = new Date().toISOString().substring(11, 19);
+    const timestamp = new Date().toLocaleTimeString('es-CL', { hour12: false });
     const newLog: LogEntry = {
       id: Math.random().toString(36).substring(2, 9),
       timestamp,
