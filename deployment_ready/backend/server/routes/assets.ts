@@ -611,7 +611,7 @@ router.post('/audit', async (req: Request, res: Response, next: NextFunction) =>
           cargo || currentCargo,
           responsable || currentResponsable,
           ubicacion || currentUbicacion,
-          currentOrgId,
+          targetOrgId,
           notes || '',
           assetId
         ]
