@@ -2,8 +2,8 @@
 
 # M-05: Permitir parametrización de la URL y API Key de auditoría (C-01)
 param (
-    [string]$ServerUrl = "http://localhost:3000",
-    [string]$ApiKey = "auditkey1234"
+    [string]$ServerUrl = "https://inventarioti.simarp.net",
+    [string]$ApiKey = "simarp_inventario_secret_token_key_2026"
 )
 
 # Configurar codificación de caracteres a UTF-8
@@ -110,7 +110,6 @@ if ($officeDetected) {
         licenseType = $officeLicenseStatus
     }
 }
-
 $AuditData = @{
     category = "Computador"
     brand = $ComputerSystem.Manufacturer
@@ -124,6 +123,8 @@ $AuditData = @{
     cargo = ""
     responsable = $ComputerSystem.PrimaryOwnerName
     ubicacion = ""
+    organizationId = 2
+    organizationName = "IP Piloto Pardo"
     software = $softwareList
 }
 

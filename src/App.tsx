@@ -1415,7 +1415,13 @@ export default function App() {
 
         {/* AUTOMATED AUDIT SCRIPT SECTION */}
         <div className="print:hidden">
-          <PCAuditorScript onImportAsset={handleImportAsset} nextId={nextId} addLog={addLog} />
+          <PCAuditorScript 
+            onImportAsset={handleImportAsset} 
+            nextId={nextId} 
+            addLog={addLog} 
+            currentOrgName={organizations.find(o => o.id === orgId)?.name || ''}
+            currentOrgId={orgId}
+          />
         </div>
 
         {/* 4. MAIN INTERACTIVE DATA GRID TABLE */}
