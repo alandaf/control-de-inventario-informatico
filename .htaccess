@@ -1,0 +1,10 @@
+RewriteEngine On
+RewriteBase /
+
+# 1. Route all /api/* requests to api.php
+RewriteRule ^api/(.*)$ api.php?route=$1 [QSA,L]
+
+# 2. React Router SPA fallback: if the requested file/folder doesn't exist, serve index.html
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule . /index.html [L]

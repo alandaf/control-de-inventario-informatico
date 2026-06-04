@@ -1,0 +1,74 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;550;700&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+}
+
+/* Base custom classes */
+input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: invert(1);
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from { opacity: 0; transform: scale(0.98); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Print Specific Rules to yield beautiful tabular PDFs using System Print */
+@media print {
+  @page {
+    size: A4 landscape;
+    margin: 10mm 15mm 10mm 15mm;
+  }
+  
+  body, #admin-inventory-root {
+    background: #ffffff !important;
+    color: #000000 !important;
+  }
+  
+  tr, td, th {
+    color: #000000 !important;
+    border-color: #cbd5e1 !important;
+  }
+
+  /* Force print background colors like zebra stripes */
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* Hide elements not suited for physical layout */
+  .print\:hidden {
+    display: none !important;
+  }
+
+  .print\:block {
+    display: block !important;
+  }
+
+  /* Optimize table sizing for paper */
+  table {
+    width: 100% !important;
+    font-size: 11px !important;
+  }
+
+  input {
+    background: transparent !important;
+    border: none !important;
+    padding: 0 !important;
+    color: #000000 !important;
+    font-size: 11px !important;
+  }
+
+  input::placeholder {
+    color: transparent !important;
+  }
+}
+

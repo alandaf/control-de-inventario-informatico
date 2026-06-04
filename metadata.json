@@ -1,0 +1,6 @@
+{
+  "name": "Control de Inventario Informático",
+  "description": "Aplicación web de gestión, control y auditoría de inventario informático con exportación a Excel y PDF.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
