@@ -102,6 +102,10 @@ export async function seedDatabase() {
     // Initial assets seeding is disabled to allow starting with a clean empty database
     // as requested by the user.
     console.log('Database schema and migrations loaded. Seeding skipped to maintain empty state.');
+
+    // Run composite key migration
+    const { runMigration } = await import('./migration');
+    await runMigration();
   } catch (err) {
     console.error('Seed error:', err);
   } finally {

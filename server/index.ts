@@ -259,16 +259,25 @@ app.post('/api/reset', authenticateToken, requireRole(['admin', 'super_admin']),
 app.get('/api/next-id', authenticateToken, requireRole(['admin']), async (req, res, next) => {
   let conn;
   try {
+    const user = (req as any).user;
+    const orgId = user?.orgId;
+    if (!orgId) {
+      res.status(400).json({ error: 'Identificador de organización faltante en la sesión.' });
+      return;
+    }
+
     conn = await pool.getConnection();
-    const rows = await conn.query('SELECT id FROM assets ORDER BY id DESC LIMIT 1');
+    const rows = await conn.query('SELECT id FROM assets WHERE organizationId = ?', [orgId]);
     if (!rows.length) {
       res.json({ nextId: 'TI-001' });
       return;
     }
-    const lastId = rows[0].id;
-    const num = parseInt(lastId.replace('TI-', ''), 10);
-    const nextNum = (isNaN(num) ? 0 : num) + 1;
-    res.json({ nextId: `TI-${String(nextNum).padStart(3, '0')}` });
+    const ids = rows.map((r: any) => {
+      const num = parseInt(r.id.replace('TI-', ''), 10);
+      return isNaN(num) ? 0 : num;
+    });
+    const maxNum = Math.max(...ids);
+    res.json({ nextId: `TI-${String(maxNum + 1).padStart(3, '0')}` });
   } catch (err: any) {
     next(err);
   } finally {

@@ -379,15 +379,17 @@ export default function App() {
 
   // --- NEXT ID GENERATOR ---
   const nextId = useMemo(() => {
-    if (assets.length === 0) return 'TI-001';
-    const ids = assets.map(a => {
+    const activeOrgId = role === 'super_admin' ? (selectedOrgFilter !== 'Todos' ? Number(selectedOrgFilter) : null) : orgId;
+    const orgAssets = activeOrgId !== null ? assets.filter(a => Number(a.organizationId) === activeOrgId) : assets;
+    if (orgAssets.length === 0) return 'TI-001';
+    const ids = orgAssets.map(a => {
       const num = parseInt(a.id.replace('TI-', ''), 10);
       return isNaN(num) ? 0 : num;
     });
     const maxNum = Math.max(...ids);
     const nextNum = maxNum + 1;
     return `TI-${String(nextNum).padStart(3, '0')}`;
-  }, [assets]);
+  }, [assets, orgId, role, selectedOrgFilter]);
 
   // --- FILTER & SORT LOGIC ---
   const filteredAssets = useMemo(() => {

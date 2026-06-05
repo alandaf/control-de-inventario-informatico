@@ -123,8 +123,8 @@ $AuditData = @{
     cargo = ""
     responsable = $ComputerSystem.PrimaryOwnerName
     ubicacion = ""
-    organizationId = 1
-    organizationName = "Simarp"
+    organizationId = 2
+    organizationName = "IP Piloto Pardo"
     software = $softwareList
 }
 

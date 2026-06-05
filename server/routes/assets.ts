@@ -177,8 +177,8 @@ router.post('/', authenticateToken, requireRole(['admin', 'super_admin']), async
           throw new Error('La clave de licencia del software excede los 200 caracteres.');
         }
         await conn.query(
-          `INSERT INTO software_items (assetId, name, version, licensed, licenseKey, licenseType) VALUES (?, ?, ?, ?, ?, ?)`,
-          [id, sw.name, sw.version || '', sw.licensed ? 1 : 0, sw.licenseKey || null, sw.licenseType || '']
+          `INSERT INTO software_items (assetId, organizationId, name, version, licensed, licenseKey, licenseType) VALUES (?, ?, ?, ?, ?, ?, ?)`,
+          [id, targetOrgId, sw.name, sw.version || '', sw.licensed ? 1 : 0, sw.licenseKey || null, sw.licenseType || '']
         );
       }
     }
@@ -238,7 +238,7 @@ router.put('/:id', authenticateToken, requireRole(['admin', 'super_admin']), asy
       [category, brand, model, serialNumber, ipAddress || '', macAddress || '', status, specification || '', purchaseDate, cargo || '', responsable || '', ubicacion || '', targetOrgId, notes || '', id]
     );
     // Replace software
-    await conn.query('DELETE FROM software_items WHERE assetId=?', [id]);
+    await conn.query('DELETE FROM software_items WHERE assetId=? AND organizationId=?', [id, targetOrgId]);
     if (software?.length) {
       for (const sw of software) {
         if (!sw.name || typeof sw.name !== 'string' || sw.name.length > 150) {
@@ -248,8 +248,8 @@ router.put('/:id', authenticateToken, requireRole(['admin', 'super_admin']), asy
           throw new Error('La clave de licencia del software excede los 200 caracteres.');
         }
         await conn.query(
-          `INSERT INTO software_items (assetId, name, version, licensed, licenseKey, licenseType) VALUES (?, ?, ?, ?, ?, ?)`,
-          [id, sw.name, sw.version || '', sw.licensed ? 1 : 0, sw.licenseKey || null, sw.licenseType || '']
+          `INSERT INTO software_items (assetId, organizationId, name, version, licensed, licenseKey, licenseType) VALUES (?, ?, ?, ?, ?, ?, ?)`,
+          [id, targetOrgId, sw.name, sw.version || '', sw.licensed ? 1 : 0, sw.licenseKey || null, sw.licenseType || '']
         );
       }
     }
@@ -375,8 +375,8 @@ router.post('/:id/software', authenticateToken, requireRole(['admin', 'super_adm
     }
 
     await conn.query(
-      `INSERT INTO software_items (assetId, name, version, licensed, licenseKey, licenseType) VALUES (?, ?, ?, ?, ?, ?)`,
-      [id, name, version || '', licensed ? 1 : 0, licenseKey || null, licenseType || '']
+      `INSERT INTO software_items (assetId, organizationId, name, version, licensed, licenseKey, licenseType) VALUES (?, ?, ?, ?, ?, ?, ?)`,
+      [id, Number(ownership.asset.organizationId), name, version || '', licensed ? 1 : 0, licenseKey || null, licenseType || '']
     );
     auditLog('ADD_SOFTWARE_SUCCESS', { assetId: id, softwareName: name }, req);
     res.status(201).json({ success: true });
@@ -486,11 +486,12 @@ router.post('/:id/software/provision', authenticateToken, requireRole(['admin', 
       );
     }
 
-    await conn.query('DELETE FROM software_items WHERE assetId=?', [id]);
+    const assetOrgId = Number(ownership.asset.organizationId);
+    await conn.query('DELETE FROM software_items WHERE assetId=? AND organizationId=?', [id, assetOrgId]);
     for (const sw of recommendations) {
       await conn.query(
-        `INSERT INTO software_items (assetId, name, version, licensed, licenseKey, licenseType) VALUES (?, ?, ?, ?, ?, ?)`,
-        [id, sw.name, sw.version, sw.licensed ? 1 : 0, sw.licenseKey || null, sw.licenseType]
+        `INSERT INTO software_items (assetId, organizationId, name, version, licensed, licenseKey, licenseType) VALUES (?, ?, ?, ?, ?, ?, ?)`,
+        [id, assetOrgId, sw.name, sw.version, sw.licensed ? 1 : 0, sw.licenseKey || null, sw.licenseType]
       );
     }
     auditLog('PROVISION_RECOMMENDED_SOFTWARE_SUCCESS', { assetId: id }, req);
@@ -583,8 +584,8 @@ router.post('/audit', async (req: Request, res: Response, next: NextFunction) =>
       }
     }
     
-    // Check if asset already exists by serialNumber
-    const existing = await conn.query('SELECT id, cargo, responsable, ubicacion, organizationId FROM assets WHERE serialNumber = ?', [serialNumber]);
+    // Check if asset already exists by serialNumber in target organization
+    const existing = await conn.query('SELECT id, cargo, responsable, ubicacion, organizationId FROM assets WHERE serialNumber = ? AND organizationId = ?', [serialNumber, targetOrgId]);
     let assetId: string;
     let action: 'updated' | 'inserted';
     
@@ -619,13 +620,15 @@ router.post('/audit', async (req: Request, res: Response, next: NextFunction) =>
     } else {
       // Does not exist: insert new asset. Retrieve next TI-xxx ID.
       action = 'inserted';
-      const rows = await conn.query('SELECT id FROM assets ORDER BY id DESC LIMIT 1');
+      const rows = await conn.query('SELECT id FROM assets WHERE organizationId = ?', [targetOrgId]);
       let nextIdVal = 'TI-001';
       if (rows.length > 0) {
-        const lastId = rows[0].id;
-        const num = parseInt(lastId.replace('TI-', ''), 10);
-        const nextNum = (isNaN(num) ? 0 : num) + 1;
-        nextIdVal = `TI-${String(nextNum).padStart(3, '0')}`;
+        const ids = rows.map((r: any) => {
+          const num = parseInt(r.id.replace('TI-', ''), 10);
+          return isNaN(num) ? 0 : num;
+        });
+        const maxNum = Math.max(...ids);
+        nextIdVal = `TI-${String(maxNum + 1).padStart(3, '0')}`;
       }
       assetId = nextIdVal;
 
@@ -653,7 +656,7 @@ router.post('/audit', async (req: Request, res: Response, next: NextFunction) =>
     }
 
     // Replace software list for this asset
-    await conn.query('DELETE FROM software_items WHERE assetId = ?', [assetId]);
+    await conn.query('DELETE FROM software_items WHERE assetId = ? AND organizationId = ?', [assetId, targetOrgId]);
     if (software && software.length > 0) {
       for (const sw of software) {
         if (!sw.name || typeof sw.name !== 'string' || sw.name.length > 150) {
@@ -663,9 +666,10 @@ router.post('/audit', async (req: Request, res: Response, next: NextFunction) =>
           throw new Error('La clave de licencia del software excede los 200 caracteres.');
         }
         await conn.query(
-          `INSERT INTO software_items (assetId, name, version, licensed, licenseKey, licenseType) VALUES (?, ?, ?, ?, ?, ?)`,
+          `INSERT INTO software_items (assetId, organizationId, name, version, licensed, licenseKey, licenseType) VALUES (?, ?, ?, ?, ?, ?, ?)`,
           [
             assetId,
+            targetOrgId,
             sw.name,
             sw.version || '',
             sw.licensed ? 1 : 0,
